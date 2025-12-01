@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Shield } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -17,20 +16,41 @@ const AuthPage: React.FC = () => {
     name: '',
   });
 
-  const { login } = useAuth();
+  const { signIn, signUp, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(isAdmin ? '/admin' : '/home');
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      const success = await login(formData.email, formData.password, isAdmin);
-      if (success) {
-        toast.success(isAdmin ? 'Welcome back, Administrator!' : 'Welcome to ArtifactAI!');
-        navigate(isAdmin ? '/admin' : '/home');
+      if (isLogin) {
+        const { error } = await signIn(formData.email, formData.password);
+        if (error) {
+          toast.error(error);
+        } else {
+          toast.success('Welcome back!');
+        }
       } else {
-        toast.error('Invalid credentials. Please try again.');
+        const { error } = await signUp(formData.email, formData.password, formData.name);
+        if (error) {
+          toast.error(error);
+        } else {
+          toast.success('Account created successfully!');
+        }
       }
     } catch {
       toast.error('An error occurred. Please try again.');
@@ -66,28 +86,8 @@ const AuthPage: React.FC = () => {
           </motion.div>
           <h1 className="font-serif text-3xl font-bold gradient-text">ArtifactAI</h1>
           <p className="text-muted-foreground mt-2">
-            {isAdmin ? 'Administrator Portal' : 'Discover History Through Your Lens'}
+            Discover History Through Your Lens
           </p>
-        </div>
-
-        {/* Auth type toggle */}
-        <div className="flex justify-center gap-2 mb-6">
-          <Button
-            variant={!isAdmin ? 'gold' : 'glass'}
-            size="sm"
-            onClick={() => setIsAdmin(false)}
-          >
-            <User className="w-4 h-4 mr-1" />
-            Visitor
-          </Button>
-          <Button
-            variant={isAdmin ? 'gold' : 'glass'}
-            size="sm"
-            onClick={() => setIsAdmin(true)}
-          >
-            <Shield className="w-4 h-4 mr-1" />
-            Admin
-          </Button>
         </div>
 
         {/* Form card */}
@@ -164,6 +164,7 @@ const AuthPage: React.FC = () => {
                   className="input-glass w-full pl-10 pr-10"
                   placeholder="••••••••"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -173,15 +174,8 @@ const AuthPage: React.FC = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">Minimum 6 characters</p>
             </div>
-
-            {isLogin && (
-              <div className="text-right">
-                <button type="button" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </button>
-              </div>
-            )}
 
             <Button
               type="submit"
@@ -201,11 +195,6 @@ const AuthPage: React.FC = () => {
             </Button>
           </form>
         </motion.div>
-
-        {/* Demo credentials */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Demo: Use any email with 6+ character password
-        </p>
       </motion.div>
     </div>
   );

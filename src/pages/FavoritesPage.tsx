@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Clock, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Heart, Clock } from 'lucide-react';
 import ArtifactCard from '@/components/ArtifactCard';
 import BottomNav from '@/components/BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockArtifacts } from '@/data/mockArtifacts';
 
 const FavoritesPage: React.FC = () => {
-  const { user } = useAuth();
+  const { favorites, history } = useAuth();
   const [activeTab, setActiveTab] = useState<'favorites' | 'history'>('favorites');
 
-  const favoriteArtifacts = mockArtifacts.filter(a => user?.favorites.includes(a.id));
-  const historyArtifacts = mockArtifacts.filter(a => user?.history.includes(a.id));
+  const favoriteArtifacts = mockArtifacts.filter(a => favorites.includes(a.id));
+  const historyArtifacts = mockArtifacts.filter(a => history.includes(a.id));
 
   const displayArtifacts = activeTab === 'favorites' ? favoriteArtifacts : historyArtifacts;
 

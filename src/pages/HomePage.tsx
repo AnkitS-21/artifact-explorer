@@ -9,7 +9,7 @@ import { mockArtifacts } from '@/data/mockArtifacts';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
-  const { user } = useAuth();
+  const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -28,6 +28,8 @@ const HomePage: React.FC = () => {
     new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
   ).slice(0, 4);
 
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Explorer';
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -41,7 +43,7 @@ const HomePage: React.FC = () => {
             <div>
               <p className="text-sm text-muted-foreground">Welcome back,</p>
               <h1 className="font-serif text-xl font-bold text-foreground">
-                {user?.name || 'Explorer'}
+                {displayName}
               </h1>
             </div>
             <Button

@@ -11,12 +11,13 @@ interface ArtifactCardProps {
 }
 
 const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, index = 0, compact = false }) => {
-  const { user, addToFavorites, removeFromFavorites } = useAuth();
+  const { isAuthenticated, favorites, addToFavorites, removeFromFavorites } = useAuth();
   const navigate = useNavigate();
-  const isFavorite = user?.favorites.includes(artifact.id);
+  const isFavorite = favorites.includes(artifact.id);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isAuthenticated) return;
     if (isFavorite) {
       removeFromFavorites(artifact.id);
     } else {
@@ -42,9 +43,11 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, index = 0, compac
           <h4 className="font-serif font-semibold text-foreground truncate">{artifact.name}</h4>
           <p className="text-sm text-muted-foreground truncate">{artifact.era}</p>
         </div>
-        <button onClick={handleFavoriteClick} className="p-2">
-          <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
-        </button>
+        {isAuthenticated && (
+          <button onClick={handleFavoriteClick} className="p-2">
+            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+          </button>
+        )}
       </motion.div>
     );
   }
@@ -67,12 +70,14 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, index = 0, compac
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
         
         {/* Favorite button */}
-        <button
-          onClick={handleFavoriteClick}
-          className="absolute top-3 right-3 p-2 glass rounded-full"
-        >
-          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-primary text-primary' : 'text-foreground'}`} />
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={handleFavoriteClick}
+            className="absolute top-3 right-3 p-2 glass rounded-full"
+          >
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-primary text-primary' : 'text-foreground'}`} />
+          </button>
+        )}
 
         {/* Popularity badge */}
         <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 glass rounded-full text-xs">
