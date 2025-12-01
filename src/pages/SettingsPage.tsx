@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { User, Bell, Globe, HelpCircle, Shield, LogOut, ChevronRight, Moon, Sun } from 'lucide-react';
+import { User, Bell, Globe, HelpCircle, Shield, LogOut, ChevronRight, Moon, Sun, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import BottomNav from '@/components/BottomNav';
@@ -9,16 +9,18 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 const SettingsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Logged out successfully');
     navigate('/auth');
   };
+
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Guest';
 
   const settingsGroups = [
     {
@@ -97,16 +99,36 @@ const SettingsPage: React.FC = () => {
             <User className="w-8 h-8 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h2 className="font-serif font-semibold text-foreground">{user?.name || 'Guest'}</h2>
+            <h2 className="font-serif font-semibold text-foreground">{displayName}</h2>
             <p className="text-sm text-muted-foreground">{user?.email || 'Not logged in'}</p>
-            <span className="inline-block mt-1 px-2 py-0.5 bg-primary/20 text-primary text-xs rounded-full capitalize">
-              {user?.role || 'Visitor'}
-            </span>
+            {isAdmin && (
+              <span className="inline-block mt-1 px-2 py-0.5 bg-primary/20 text-primary text-xs rounded-full">
+                Administrator
+              </span>
+            )}
           </div>
           <Button variant="glass" size="sm">
             Edit
           </Button>
         </motion.div>
+
+        {/* Admin Dashboard Link */}
+        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <Button
+              variant="gold"
+              className="w-full"
+              onClick={() => navigate('/admin')}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Admin Dashboard
+            </Button>
+          </motion.div>
+        )}
 
         {/* Settings groups */}
         {settingsGroups.map((group, groupIndex) => (

@@ -11,18 +11,18 @@ import { toast } from 'sonner';
 const ArtifactDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, addToFavorites, removeFromFavorites, addToHistory } = useAuth();
+  const { isAuthenticated, favorites, history, addToFavorites, removeFromFavorites, addToHistory } = useAuth();
 
   const artifact = getArtifactById(id || '');
-  const isFavorite = user?.favorites.includes(id || '');
+  const isFavorite = favorites.includes(id || '');
   const nearbyArtifacts = artifact ? getNearbyArtifacts(artifact.coordinates.x, artifact.coordinates.y) : [];
-  const recommendations = artifact ? getRecommendations(artifact, user?.history || []) : [];
+  const recommendations = artifact ? getRecommendations(artifact, history) : [];
 
   useEffect(() => {
-    if (id) {
+    if (id && isAuthenticated) {
       addToHistory(id);
     }
-  }, [id, addToHistory]);
+  }, [id, isAuthenticated, addToHistory]);
 
   if (!artifact) {
     return (
@@ -33,6 +33,7 @@ const ArtifactDetailPage: React.FC = () => {
   }
 
   const handleFavorite = () => {
+    if (!isAuthenticated) return;
     if (isFavorite) {
       removeFromFavorites(artifact.id);
       toast.success('Removed from favorites');
@@ -76,9 +77,11 @@ const ArtifactDetailPage: React.FC = () => {
             <Button variant="glass" size="icon" onClick={handleShare}>
               <Share2 className="w-5 h-5" />
             </Button>
-            <Button variant="glass" size="icon" onClick={handleFavorite}>
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : ''}`} />
-            </Button>
+            {isAuthenticated && (
+              <Button variant="glass" size="icon" onClick={handleFavorite}>
+                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : ''}`} />
+              </Button>
+            )}
           </div>
         </div>
       </div>

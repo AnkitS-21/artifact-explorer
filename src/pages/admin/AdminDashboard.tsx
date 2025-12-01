@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Package, Map, Users, Settings, LogOut,
@@ -11,16 +11,26 @@ import { mockArtifacts } from '@/data/mockArtifacts';
 import { toast } from 'sonner';
 
 const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'artifacts' | 'map' | 'settings'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleLogout = () => {
-    logout();
+  // Redirect non-admins
+  useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      toast.error('Access denied. Admin privileges required.');
+      navigate('/home');
+    }
+  }, [isAdmin, isLoading, navigate]);
+
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Logged out successfully');
     navigate('/auth');
   };
+
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Admin';
 
   const stats = [
     { label: 'Total Artifacts', value: mockArtifacts.length, icon: Package, trend: '+12%' },
@@ -39,6 +49,14 @@ const AdminDashboard: React.FC = () => {
     { id: 'map', label: 'Map Editor', icon: Map },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -86,7 +104,7 @@ const AdminDashboard: React.FC = () => {
               <Users className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
-              <p className="font-medium text-foreground text-sm">{user?.name}</p>
+              <p className="font-medium text-foreground text-sm">{displayName}</p>
               <p className="text-xs text-muted-foreground">Administrator</p>
             </div>
           </div>
@@ -108,7 +126,7 @@ const AdminDashboard: React.FC = () => {
             >
               <div>
                 <h2 className="font-serif text-2xl font-bold text-foreground">Dashboard</h2>
-                <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+                <p className="text-muted-foreground">Welcome back, {displayName}</p>
               </div>
 
               {/* Stats grid */}
